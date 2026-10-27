@@ -42,7 +42,7 @@ async function request(path, body, headers = {}) {
     check(text.trim() === raw.body.backup, 'download contains exact raw key without password');
     check(!(await p.locator('.pf-sheet').innerText()).includes(raw.body.backup), 'private key never painted in backup sheet');
     check(await p.getByRole('button', { name: 'Done', exact: true }).isDisabled(), 'Done requires saved acknowledgement');
-    await p.locator('.pf-sheet .pf-x').click();
+    await p.locator('.pf-sheet .wz-sheet-x').click();
     await p.locator('.pf-safe').click(); await p.getByRole('button', { name: 'Copy private key', exact: true }).click();
     await p.waitForFunction(() => document.querySelector('.pf-copy')?.textContent === 'Copied');
     check(await p.evaluate(() => navigator.clipboard.readText()) === raw.body.backup, 'direct copy writes exact raw key');
@@ -58,7 +58,7 @@ async function request(path, body, headers = {}) {
     const [lockedDownload] = await Promise.all([p.waitForEvent('download'), p.getByRole('button', { name: 'Save as file' }).click()]);
     const lockedStream = await lockedDownload.createReadStream(); let lockedText = ''; for await (const c of lockedStream) lockedText += c.toString();
     check(lockedText.includes('ncryptsec1') && !lockedText.includes(raw.body.backup), 'optional encrypted download remains encrypted');
-    await p.locator('.pf-sheet .pf-x').click();
+    await p.locator('.pf-sheet .wz-sheet-x').click();
     await p.locator('.pf-safe').click(); await p.getByRole('button', { name: 'Restore it' }).click();
     check(await p.getByPlaceholder('Backup password').isHidden(), 'restore initially needs no password');
     const [chooser] = await Promise.all([p.waitForEvent('filechooser'), p.getByRole('button', { name: 'Or pick the backup file' }).click()]);

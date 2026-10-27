@@ -183,7 +183,7 @@ function cropPhoto(file) {
     const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
     view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
     view.addEventListener('wheel', e => { e.preventDefault(); zoom = Math.max(1, Math.min(4, zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); slider.value = String(zoom); draw(); }, { passive: false });
-    const close = () => { URL.revokeObjectURL(url); sheet.remove(); };
+    const close = () => window.WzSheet.close(sheet);
     const save = h('button', { type: 'button', class: 'pf-btn go', onclick: async () => {
       save.disabled = true; save.textContent = 'Saving…';
       try {
@@ -195,13 +195,13 @@ function cropPhoto(file) {
         ME = await api('api/me', 'PUT', { picture: data }); close(); render(); say('Photo saved.', 'note');
       } catch (err) { say(err.message, 'error'); save.disabled = false; save.textContent = 'Use photo'; }
     } }, 'Use photo');
-    const sheet = h('div', { class: 'pf-crop', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Choose what shows in your photo' },
+    const sheet = h('dialog', { class: 'wz-sheet pf-crop', 'aria-label': 'Choose what shows in your photo', onclose: () => { URL.revokeObjectURL(url); sheet.remove(); } },
       h('div', { class: 'pf-crop-card' },
         h('b', { text: 'Move and zoom' }), h('small', { text: 'Drag to move. Pinch or slide to zoom.' }),
         h('div', { class: 'pf-crop-stage' }, view, h('span', { class: 'pf-crop-ring', 'aria-hidden': 'true' })),
         slider,
         h('div', { class: 'pf-row-acts center' }, h('button', { type: 'button', class: 'pf-btn', onclick: close }, 'Cancel'), save)));
-    document.body.append(sheet); draw(); save.focus();
+    document.body.append(sheet); window.WzSheet.open(sheet); draw(); save.focus();
   };
   img.src = url;
 }
@@ -220,8 +220,8 @@ async function setLevel(part, level) {
 }
 async function reloadMe() { try { ME = await api('api/me'); render(); } catch (_) {} }
 const hintFor = (part, yes, no) => ME.visibility[part] === 'private' ? no : yes;
-function card(title, sub, level, body, hint) {
-  return h('section', { class: 'pf-card' },
+function card(title, sub, level, body, hint, cls = '') {
+  return h('section', { class: 'pf-card' + (cls ? ' ' + cls : '') },
     h('div', { class: 'pf-card-h' }, h('div', { class: 'wz-main' }, h('b', { text: title }), sub ? h('small', { text: sub }) : null)),
     body, level, hint ? h('p', { class: 'pf-hint', text: hint }) : null);
 }
@@ -246,15 +246,17 @@ function renderMe() {
     'It opened on an address of its own, so it can\'t read your look, build and apps. Ask your Wizard: "Put Profiles on my Wizard\'s own address." Friends and your Nostr ID already work.'));
   v.append(h('p', { class: 'pf-share', text: shareLine() }));
   // Name and photo
-  v.append(card('Name and photo', 'Friends always see who you are', levelPicker('card', ['friends', 'public']), null));
+  // The parts: one column when narrow, side by side (.wz-grid) when the window is wide; Apps spans the row.
+  const cards = h('div', { class: 'pf-cards wz-grid' });
+  cards.append(card('Name and photo', 'Friends always see who you are', levelPicker('card', ['friends', 'public']), null));
   // Look
   const live = currentSkin(), sk = snap?.skin;
-  v.append(card('Look', sk ? sk.name + (sk.css ? ' + your own touches' : '') : live.name, levelPicker('skin', ['private', 'friends', 'public']),
+  cards.append(card('Look', sk ? sk.name + (sk.css ? ' + your own touches' : '') : live.name, levelPicker('skin', ['private', 'friends', 'public']),
     h('div', { class: 'pf-skin' }, h('span', { class: 'pf-swatch', 'aria-hidden': 'true' }), h('span', { text: `The skin you wear now${sk?.css ? ', with your My skin changes' : ''}.` })),
     hintFor('skin', 'Friends can wear it for a while and switch back.', 'Share it and friends can wear it for a while.')));
   // Build
   const b = snap?.build;
-  v.append(card('Build', b ? `${b.name} · ${b.changes.length} change${b.changes.length === 1 ? '' : 's'}` : 'Not shareable yet', levelPicker('build', ['private', 'friends']),
+  cards.append(card('Build', b ? `${b.name} · ${b.changes.length} change${b.changes.length === 1 ? '' : 's'}` : 'Not shareable yet', levelPicker('build', ['private', 'friends']),
     b ? (b.changes.length ? h('ul', { class: 'pf-changes' }, b.changes.slice(0, 3).map(c => h('li', { text: c.title })), b.changes.length > 3 ? h('li', { class: 'more', text: `and ${b.changes.length - 3} more` }) : null) : null)
       : h('p', { class: 'pf-hint', text: "This build isn't public code yet, so nobody else could run it." }),
     hintFor('build', 'Friends can try it on beside their own Wizard.', 'Share it with friends and they can try it on. Never shared with everyone.')));
@@ -267,9 +269,10 @@ function renderMe() {
   });
   const kept = (REPORT?.kept_private || []).filter(x => x.part === 'apps').length;
   const shown = apps.length - apps.filter(a => ME.hidden.includes(a.id)).length;
-  v.append(card('Apps', `${shown} of ${apps.length} App Store apps`, levelPicker('apps', ['private', 'friends', 'public']),
+  cards.append(card('Apps', `${shown} of ${apps.length} App Store apps`, levelPicker('apps', ['private', 'friends', 'public']),
     apps.length ? grid : h('p', { class: 'pf-hint', text: APART ? 'Not readable from this address yet.' : 'Reading your apps…' }),
-    `Tap an app to hide or show it.${kept ? ` ${kept} app${kept === 1 ? '' : 's'} you built or keep private never show.` : ' Apps you built yourself never show.'}`));
+    `Tap an app to hide or show it.${kept ? ` ${kept} app${kept === 1 ? '' : 's'} you built or keep private never show.` : ' Apps you built yourself never show.'}`, 'pf-wide'));
+  v.append(cards);
   v.append(h('div', { class: 'pf-row-acts center' },
     h('button', { type: 'button', class: 'pf-btn', onclick: () => preview('friend') }, 'See what friends see'),
     h('button', { type: 'button', class: 'pf-btn', onclick: () => preview('public') }, 'See what everyone sees')));
@@ -291,21 +294,34 @@ const ICON = {
   key: '<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2.5 2.5M14 9l2 2"/></svg>',
 };
 /* ---------- identity backup: direct Nostr key, or optional NIP-49 encryption ---------- */
+/* The one pop-up (design rules v0): a <dialog class="wz-sheet"> that closes with ×, Esc, outside tap, Back and swipe-down.
+ * Whatever way it closes, typed passwords and shown keys are wiped and the dialog is removed. */
 function sheet(label, ...kids) {
   let closed = false;
-  const close = () => {
+  const card = h('div', { class: 'pf-sheet-card' }, ...kids);
+  // Wipe at once (not on the later close event): Esc fires cancel, every other way calls el.close().
+  const scrub = () => {
     closed = true;
     el.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
     el.querySelectorAll('.pf-backup').forEach(i => { i.textContent = ''; });
-    el.replaceChildren(); el.remove(); document.removeEventListener('keydown', esc);
   };
-  const esc = e => { if (e.key === 'Escape') close(); };
-  const el = h('div', { class: 'pf-crop pf-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': label, onclick: e => { if (e.target === el) close(); } },
-    h('div', { class: 'pf-crop-card pf-sheet-card' }, h('span', { class: 'pf-grabber', 'aria-hidden': 'true' }),
-      h('button', { type: 'button', class: 'pf-x', 'aria-label': 'Close', onclick: () => close(), html: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>' }), ...kids));
-  document.addEventListener('keydown', esc);
-  document.body.append(el);
-  return { el, close, card: el.firstChild, get closed() { return closed; } };
+  const el = h('dialog', { class: 'wz-sheet pf-sheet', 'aria-label': label, oncancel: scrub, onclose: () => { scrub(); el.replaceChildren(); el.remove(); } }, card);
+  const nativeClose = el.close.bind(el);
+  el.close = (...a) => { scrub(); nativeClose(...a); };
+  document.body.append(el); window.WzSheet.open(el);
+  return { el, close: () => window.WzSheet.close(el), card, get closed() { return closed; } };
+}
+/* Confirm in a sheet instead of the browser's confirm(): resolves true only on the confirm button. */
+function confirmSheet(question, yes, danger = false) {
+  return new Promise(resolve => {
+    let ok = false;
+    const sh = sheet(question,
+      h('b', { text: question }),
+      h('div', { class: 'pf-pair' },
+        h('button', { type: 'button', class: 'pf-btn', onclick: () => sh.close() }, 'Cancel'),
+        h('button', { type: 'button', class: 'pf-btn go' + (danger ? ' danger-go' : ''), onclick: () => { ok = true; sh.close(); } }, yes)));
+    sh.el.addEventListener('close', () => resolve(ok), { once: true });
+  });
 }
 function pwField(placeholder, auto) {
   const i = h('input', { class: 'wz-input', type: 'password', placeholder, autocomplete: auto, minlength: 10, maxlength: 200, 'aria-label': placeholder });
@@ -368,7 +384,7 @@ function savedStep(sh, code, npub, encrypted = true, download = false) {
     try { ME = await api('api/identity/confirm', 'POST', {}); render(); sh.close(); say('Identity backed up.', 'note'); } catch (x) { say(x.message, 'error'); }
   } }, 'Done');
   const tick = h('input', { type: 'checkbox', onchange: () => { done.disabled = !tick.checked; } });
-  sh.card.replaceChildren(sh.card.querySelector('.pf-x'),
+  sh.card.replaceChildren(
     h('span', { class: 'pf-sheet-ic ok', 'aria-hidden': 'true', html: ICON.shieldOk }),
     h('b', { text: 'Your backup is ready' }),
     h('p', { class: 'pf-sheet-p', text: encrypted ? "Save it in your password manager, or anywhere off this server. You'll need your password to restore it." : 'Save this private key in your password manager. Anyone holding it can use your identity. No extra password is needed to restore it.' }),
@@ -454,7 +470,7 @@ function renderFriends() {
       h('button', { type: 'button', class: 'pf-chip', onclick: async () => { ME = await api('api/requests/dismiss', 'POST', { npub: r.npub }); render(); } }, 'Ignore')));
     v.append(h('section', { class: 'wz-sec' }, h('h2', { class: 'wz-sec-h' }, 'Added you'), reqs));
   }
-  const list = h('ul', { class: 'wz-list' });
+  const list = h('ul', { class: 'wz-list wz-grid pf-friends' });
   for (const f of ME.friends) list.append(h('li', {},
     h('button', { type: 'button', class: 'wz-row pf-friend', onclick: () => openFriend(f) }, avatar(f, 'sm'),
       h('span', { class: 'wz-main' }, h('b', { text: f.name }), h('small', { text: shortNpub(f.npub) })), h('span', { class: 'pf-go', 'aria-hidden': 'true' }, '›'))));
@@ -480,7 +496,7 @@ async function openFriend(f) {
   if (TAB === 'friend') renderFriend();
 }
 async function removeFriend(f) {
-  if (!confirm(`Remove ${f.name}? They stop getting what you share with friends.`)) return;
+  if (!(await confirmSheet(`Remove ${f.name}? They stop getting what you share with friends.`, 'Remove', true))) return;
   try { ME = await api('api/friends/' + f.id, 'DELETE'); show('friends'); } catch (e) { say(e.message, 'error'); }
 }
 
@@ -502,16 +518,17 @@ function renderFriend() {
     v.append(h('div', { class: 'wz-empty' }, h('strong', {}, mine ? 'Nothing shared here' : 'Nothing shared with you yet'),
       h('p', {}, mine ? 'Every part is set to Only you.' : p.viewer === 'none' ? "They haven't added you back yet, or their Wizard hasn't shared since." : "They haven't shared anything with friends.")));
   }
+  const cards = h('div', { class: 'pf-cards wz-grid' });
   if (p.skin) {
     const k = p.skin, wearing = ME.wearing?.friend === p.name;
-    v.append(card('Look', k.name + (k.css ? ' + their touches' : ''), mine ? null : h('div', { class: 'pf-row-acts' },
+    cards.append(card('Look', k.name + (k.css ? ' + their touches' : ''), mine ? null : h('div', { class: 'pf-row-acts' },
       wearing ? h('button', { type: 'button', class: 'pf-btn', onclick: restoreLook }, 'Back to my look') : h('button', { type: 'button', class: 'pf-btn go', onclick: () => wearLook(k, p.name) }, 'Wear this look'),
       ME.look_saved && !wearing ? h('button', { type: 'button', class: 'pf-btn', onclick: restoreLook }, 'Back to my look') : null), null,
       mine ? null : 'Only colours and styling. Your own look is saved first.'));
   }
   if (p.build) {
     const b = p.build, t = TRY?.commit === b.commit ? TRY : null;
-    v.append(card('Build', b.name, mine ? null : h('div', { class: 'pf-row-acts' },
+    cards.append(card('Build', b.name, mine ? null : h('div', { class: 'pf-row-acts' },
       t?.state === 'ready' ? [h('a', { class: 'pf-btn go', href: t.url, target: '_blank', rel: 'noopener' }, 'Open it'), h('button', { type: 'button', class: 'pf-btn', onclick: stopTry }, 'Stop trying')]
         : t && ['queued', 'building', 'starting'].includes(t.state) ? h('button', { type: 'button', class: 'pf-btn', disabled: true }, 'Getting it ready…')
           : h('button', { type: 'button', class: 'pf-btn go', onclick: () => tryOn(b, p.name) }, 'Try it on')),
@@ -524,8 +541,9 @@ function renderFriend() {
       return h(mine || have ? 'div' : 'a', { class: 'pf-tile' + (a.system ? ' sys' : ''), ...(mine || have ? {} : { href: `/wizard-os-home/store/index.html?app=${encodeURIComponent(a.store_id || a.id)}`, title: `Get ${a.name}` }) },
         appIcon(a), h('span', { class: 'pf-tile-n', text: a.name }), mine ? null : h('span', { class: 'pf-tile-x' + (have ? '' : ' get'), text: have ? 'You have it' : 'Get' }));
     });
-    v.append(card('Apps', `${p.apps.length} App Store app${p.apps.length === 1 ? '' : 's'}`, null, p.apps.length ? grid : h('p', { class: 'pf-hint', text: 'No apps shared.' }), null));
+    cards.append(card('Apps', `${p.apps.length} App Store app${p.apps.length === 1 ? '' : 's'}`, null, p.apps.length ? grid : h('p', { class: 'pf-hint', text: 'No apps shared.' }), null, 'pf-wide'));
   }
+  if (cards.childElementCount) v.append(cards);
   if (!mine && f.id) v.append(h('div', { class: 'pf-row-acts center' }, h('button', { type: 'button', class: 'pf-btn danger', onclick: () => removeFriend(f) }, `Remove ${f.name}`)));
 }
 

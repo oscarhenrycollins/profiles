@@ -1,5 +1,4 @@
 /* Profiles: app specifics only. Shared type, rows, colours come from wizard-ui.css (skin tokens, no literals). */
-.pf-root { max-width: 680px; }
 /* Title over subtitle everywhere (the kit only stacks them inside .wz-row). */
 .pf-who .wz-main, .pf-part .wz-main, .pf-item .wz-main, .pf-tryon .wz-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .pf-part .wz-main b, .pf-item .wz-main b, .pf-tryon .wz-main b { font-size: 15px; font-weight: 650; }
@@ -31,7 +30,7 @@ button.pf-npub:active { background: var(--fill-2); }
 .pf-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 99px; background: var(--fill); box-shadow: inset 0 0 0 1px var(--line); }
 .pf-seg button { min-height: 34px; padding: 0 12px; border-radius: 99px; font-size: 13px; font-weight: 650; color: var(--ink-2); white-space: nowrap; }
 .pf-seg button.on { color: var(--on-accent); background: var(--accent); }
-@media (max-width: 420px) { .pf-part { grid-template-columns: 1fr; } .pf-seg { justify-self: start; } .pf-seg button { padding: 0 10px; } }
+@container wz-app (max-width: 420px) { .pf-part { grid-template-columns: 1fr; } .pf-seg { justify-self: start; } .pf-seg button { padding: 0 10px; } }
 
 .pf-publish { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 8px 6px; }
 .pf-publish small { font-size: 13px; color: var(--ink-3); text-align: center; }
@@ -140,10 +139,7 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
 .pf-sys-toggle { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px; border-radius: 99px;
   font-size: 13px; font-weight: 650; color: var(--ink-2); box-shadow: inset 0 0 0 1.5px var(--line-2); }
 .pf-sys-dot { width: 12px; height: 12px; border-radius: 4px; border: 2px solid var(--violet-2, #8f63ff); }
-.pf-crop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(4, 3, 10, .72);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.pf-crop-card { width: min(100%, 340px); display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 16px 10px;
-  border-radius: 22px; background: var(--surface-raised, #1c133a); box-shadow: 0 20px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px var(--line); }
+.pf-crop-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0 0; }
 .pf-crop-card > b { font-size: 17px; }
 .pf-crop-card > small { font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
 .pf-crop-stage { position: relative; width: 280px; height: 280px; border-radius: 18px; overflow: hidden; background: #000; touch-action: none; }
@@ -163,9 +159,7 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
   background: color-mix(in srgb, var(--warn, #f0b54a) 16%, transparent); }
 .pf-safe.ok .pf-safe-ic { color: var(--ok, #4fd18b); background: color-mix(in srgb, var(--ok, #4fd18b) 16%, transparent); }
 .pf-safe-ic svg, .pf-sheet-ic svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.pf-sheet { align-items: end; }
-@media (min-width: 600px) { .pf-sheet { align-items: center; } }
-.pf-sheet-card { width: min(100%, 400px); gap: 8px; padding: 22px 18px calc(12px + env(safe-area-inset-bottom, 0px)); text-align: center; }
+.pf-sheet-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 0 0; text-align: center; }
 .pf-sheet-ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; margin-bottom: 4px; color: var(--on-accent);
   background: linear-gradient(150deg, var(--violet-2, #8f63ff), var(--accent)); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 40%, transparent); }
 .pf-sheet-ic svg { width: 26px; height: 26px; }
@@ -194,12 +188,7 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
 .pf-safe-ic { color: var(--accent); background: var(--accent-soft, color-mix(in srgb, var(--accent) 18%, transparent)); }
 .pf-safe:not(.ok) small { color: var(--warn, #f0b54a); }
 .pf-safe .pf-go { font-size: 22px; color: var(--ink-2); }
-.pf-sheet { padding: 0; }
-.pf-sheet-card { position: relative; width: min(100%, 420px); border-radius: 26px 26px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px)); gap: 10px; max-height: 92vh; overflow: auto; }
-@media (min-width: 600px) { .pf-sheet { padding: 16px; } .pf-sheet-card { border-radius: 24px; padding-bottom: 22px; } .pf-grabber { display: none; } }
-.pf-grabber { width: 38px; height: 5px; border-radius: 99px; background: var(--line-2); margin: 0 auto 8px; }
-.pf-x { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); background: var(--fill); }
-.pf-x svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.pf-sheet-card { gap: 10px; }
 .pf-sheet-card > b { font-size: 19px; margin-top: 2px; }
 .pf-sheet-p { margin: 0 6px 8px; }
 .pf-sheet-form { gap: 10px; }
@@ -215,9 +204,6 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
 .pf-tick input { width: 22px; height: 22px; }
 .pf-btn.go:disabled { opacity: 1; background: var(--fill-2, var(--fill)); color: var(--ink-3); }
 
-.pf-sheet-card { border-bottom: 0; box-shadow: 0 -10px 50px rgba(0, 0, 0, .5), inset 0 1px 0 var(--line-2); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-@media (min-width: 600px) { .pf-sheet-card { box-shadow: 0 20px 60px rgba(0, 0, 0, .55), inset 0 0 0 1px var(--line); } }
-.pf-x { right: 20px; top: 14px; }
 .pf-sheet-ic svg { width: 30px; height: 30px; stroke-width: 2.2; }
 .pf-warn.soft { padding: 12px 14px; color: var(--ink); background: color-mix(in srgb, var(--warn, #f0b54a) 12%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warn, #f0b54a) 30%, transparent); }
 .pf-tick input { appearance: none; -webkit-appearance: none; margin: 0; border-radius: 7px; border: 2px solid var(--accent); display: grid; place-items: center; cursor: pointer; }
@@ -228,3 +214,19 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
 
 .pf-safe:not(.ok) .pf-safe-ic { color: var(--warn, #f0b54a); background: color-mix(in srgb, var(--warn, #f0b54a) 16%, transparent); }
 .pf-safe.ok .pf-safe-ic { color: var(--ok, #4fd18b); background: color-mix(in srgb, var(--ok, #4fd18b) 16%, transparent); }
+
+/* ---- design rules v0: the window is the page ---- */
+/* Your parts and a friend's parts: one column narrow, side by side when wide; Apps (its tile grid) spans the row. */
+.pf-cards { gap: 12px; margin: 0 4px 12px; align-items: start; }
+.pf-cards > .pf-card { margin: 0; }
+.pf-cards > .pf-wide { grid-column: 1 / -1; }
+/* Friends: list rows when narrow, a grid of rows when wide. */
+.pf-friends.wz-grid { gap: 2px 12px; }
+/* Sheets: the kit's .wz-sheet is the container; these are only its contents. */
+.pf-sheet .pf-sheet-card > b { padding: 0 34px; }
+.pf-btn.go.danger-go { background: var(--danger); color: var(--on-accent); }
+/* Standalone fallback for the sheet (design rules v0): an app opened at its own URL keeps its vendored
+ * wizard-ui.css, which has no spacing/overlay tokens yet; inside Wizard the live kit supplies them. */
+.wz-sheet { padding: var(--wz-space-4, 16px); background: var(--wz-overlay, var(--wz-surface-raised, var(--canvas))); }
+.wz-sheet::backdrop { background: color-mix(in srgb, var(--wz-base, var(--canvas)) 74%, transparent); }
+@media (max-width: 599px) { .wz-sheet { padding: 6px var(--wz-space-4, 16px) calc(var(--wz-space-4, 16px) + env(safe-area-inset-bottom, 0px)); } }
