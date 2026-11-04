@@ -4,7 +4,7 @@ id: profiles
 name: Profiles
 type: view
 category: app
-version: 0.5.2
+version: 0.5.3
 summary: Your Wizard profile with its own Nostr ID. Add friends by ID and share your look, build and App Store apps.
 tags: [communication]
 license: GPL-3.0-only

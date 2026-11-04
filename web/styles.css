@@ -230,3 +230,25 @@ code.pf-npub.sm { display: inline-block; margin-top: 3px; padding: 2px 8px; bord
 .wz-sheet { padding: var(--wz-space-4, 16px); background: var(--wz-overlay, var(--wz-surface-raised, var(--canvas))); }
 .wz-sheet::backdrop { background: color-mix(in srgb, var(--wz-base, var(--canvas)) 74%, transparent); }
 @media (max-width: 599px) { .wz-sheet { padding: 6px var(--wz-space-4, 16px) calc(var(--wz-space-4, 16px) + env(safe-area-inset-bottom, 0px)); } }
+
+/* 0.5.3 friendliness pass (Miguel, 4 Nov 2026: friendly, intuitive, mobile first).
+ * Bottom nav = full-width equal cells with icon + label inline, the selected cell a filled pill (no stacked labels);
+ * 44px targets on touch screens; the backup nudge reads on light skins; full screen keeps the title clear of the
+ * shell's "Exit full screen" pill. */
+.pf-tabs, html.wz-hosted .pf-tabs { gap: 6px; padding: 6px 8px; background: var(--wz-panel, color-mix(in srgb, var(--wz-text) 8%, var(--wz-base))); }
+.pf-tabs button, html.wz-hosted .pf-tabs button { flex-direction: row; gap: 8px; min-height: 44px; border-radius: 99px; color: var(--ink-2); font-size: var(--wz-text-md, .875rem); }
+.pf-tabs svg { width: 20px; height: 20px; }
+html .pf-tabs button[aria-current="page"] { color: var(--on-accent); background: var(--accent); }
+@media (hover: hover) { .pf-tabs button:not([aria-current="page"]):hover { background: var(--fill-2); color: var(--ink); } }
+.pf-tabs i { top: 10px; left: auto; right: calc(50% - 46px); box-shadow: 0 0 0 2px var(--wz-base); }
+.pf-safe:not(.ok) small { color: var(--ink-2); }
+html[data-presentation="immersive"] .wz-head { padding-top: calc(var(--wos-cutout, 0px) + 52px); }
+@media (pointer: coarse) {
+  .pf-seg button, .pf-chip, .pf-btn, .pf-back, .pf-sys-toggle, .pf-pair .pf-btn { min-height: 44px; }
+  .pf-eye { min-height: 40px; }
+  .wz-sheet-x { width: 44px; height: 44px; }
+}
+/* Sheets paint the opaque kit panel: on light skins the translucent overlay let the purple pickers behind show through. */
+.wz-sheet { background: var(--wz-panel, color-mix(in srgb, var(--wz-text) 8%, var(--wz-base))); }
+@media (pointer: coarse) { .pf-link-btn { display: inline-flex; align-items: center; min-height: 44px; } }
+@container wz-app (min-width: 700px) { .pf-tabs button, html.wz-hosted .pf-tabs button { justify-self: center; width: min(100%, 240px); } }

@@ -3,6 +3,7 @@
   'use strict';
   const root = document.documentElement;
   const names = ['canvas','surface','surface-raised','text','text-secondary','text-muted','border','accent','accent-soft','on-accent','reader-surface'];
+  const optional = ['base','chrome','overlay'];
   const fallback = {canvas:'#05030c',surface:'rgba(18,12,38,.58)','surface-raised':'rgba(28,19,58,.92)',text:'#f3efff','text-secondary':'#b9b0d8','text-muted':'#a59abf',border:'rgba(205,190,255,.24)',accent:'#b99bff','accent-soft':'rgba(143,99,255,.16)','on-accent':'#160b32','reader-surface':'#0e0919'};
   const trustedHost = location.origin; // Preview only. Installed app manifest supplies its exact trusted host origin.
   let current = null, connected = false;
@@ -17,6 +18,8 @@
     if (!valid(a)) return false;
     if (connected && current && a.revision < current.revision) return false;
     for (const k of names) root.style.setProperty('--wz-'+k,a.tokens[k]);
+    // Newer shells also send the opaque base, chrome and overlay: sheets and bars need them on light skins.
+    for (const k of optional) { const v = a.tokens[k]; if (typeof v === 'string' && v.length < 96 && CSS.supports('color',v) && !/[;{}]/.test(v)) root.style.setProperty('--wz-'+k,v); }
     root.style.setProperty('--wz-font-ui','ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif');
     root.style.setProperty('--wz-radius','14px');
     root.style.colorScheme = a.colorScheme;
